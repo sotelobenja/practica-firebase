@@ -82,7 +82,8 @@ La URL de producción `/cursos` respondió correctamente desde SQL Connect y mos
 - [Preview del PR #1](https://practica-firebase-a8e3e--pr1-feat-firebase-cicd-u04qt31f.web.app), con vencimiento indicado por el bot: 14 de noviembre de 2026, 20:11 UTC.
 - [Ejecución exitosa del workflow de preview](https://github.com/sotelobenja/practica-firebase/actions/runs/43094020971/job/130778103111).
 - [PR #2 mergeado](https://github.com/sotelobenja/practica-firebase/pull/2), que elimina la imagen de portada que fallaba.
-- [PR #3 de esta entrega](https://github.com/sotelobenja/practica-firebase/pull/3) (abierto; checks de build y deploy preview exitosos).
+- [PR #3 de esta entrega](https://github.com/sotelobenja/practica-firebase/pull/3), mergeado el 11 de noviembre de 2026; el commit de merge en `main` es `823f7b2`.
 - [Comentario automático del bot con la preview del PR #3](https://github.com/sotelobenja/practica-firebase/pull/3#issuecomment-6809934803).
-- [Preview del PR #3](https://practica-firebase-a8e3e--pr3-feat-complete-sql-co-64yl41qk.web.app), válida hasta el 14 de noviembre de 2026, 23:43 UTC; se verificó que muestra los 7 cursos.
-- [Ejecución del workflow del PR #3](https://github.com/sotelobenja/practica-firebase/actions/runs/43121840344/job/130863979461).
+- [Preview del PR #3](https://practica-firebase-a8e3e--pr3-feat-complete-sql-co-64yl41qk.web.app), válida hasta el 14 de noviembre de 2026, 23:45:18 UTC; se verificó que muestra los 7 cursos.
+- [Checks exitosos de build y deploy preview del PR #3](https://github.com/sotelobenja/practica-firebase/actions/runs/43122152069).
+- [Deploy a producción tras mergear el PR #3](https://github.com/sotelobenja/practica-firebase/actions/runs/43122700566), finalizado exitosamente. La versión `823f7b2` de `main` quedó publicada y se verificó que `/cursos` muestra `7 de 7 cursos`.
