@@ -152,6 +152,7 @@ Formato de un header en `firebase.json`:
 - **`/cursos` da 404 en el emulador o en producción:** revisá que `cleanUrls` siga en
   `true` (el export genera `cursos.html`, no `cursos/index.html`).
 - **La app se ve pero el filtro no responde:** CSP bloqueando scripts. Consola de DevTools.
-- **La imagen de portada no carga:** CSP bloqueando `img-src`.
+- **Las imágenes no cargan:** revisá que los archivos sean propios del sitio y que `img-src`
+  en la CSP permita su origen.
 - **Cambié `firebase.json` y no veo los headers:** ¿reconstruiste y reiniciaste el emulador?
   ¿Estás mirando una respuesta cacheada? Probá con `curl -I` o en una ventana privada.

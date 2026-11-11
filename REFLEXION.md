@@ -14,7 +14,7 @@ La service account tiene permisos de despliegue y, si se compromete, puede publi
 
 ## 4) La CSP rompió la app: ¿por qué? ¿Qué opciones evaluaste y qué costo de seguridad tiene cada una?
 
-La CSP inicial bloqueaba los scripts inline de hidratación que Next.js genera dentro del HTML estático; por eso la página se veía, pero el filtro no respondía. Se permite `script-src 'self' 'unsafe-inline'` para que Next.js hidrate la app. Esto tiene un costo: si un XSS logra inyectar un script inline, la CSP ya no lo bloquea. No se habilita `unsafe-eval` ni se permite JavaScript desde orígenes externos. La imagen de portada solo necesita el origen concreto `https://picsum.photos`. Una alternativa más estricta sería generar hashes SHA-256 de los scripts inline de cada HTML durante el build y mantenerlos sincronizados con la CSP; eso evita `unsafe-inline`, pero requiere automatización en el pipeline para actualizarlos en cada build.
+La CSP inicial bloqueaba los scripts inline de hidratación que Next.js genera dentro del HTML estático; por eso la página se veía, pero el filtro no respondía. Se permite `script-src 'self' 'unsafe-inline'` para que Next.js hidrate la app. Esto tiene un costo: si un XSS logra inyectar un script inline, la CSP ya no lo bloquea. No se habilita `unsafe-eval` ni se permite JavaScript desde orígenes externos. La imagen externa de portada se quitó porque su servicio no cargaba de forma confiable; por eso `img-src` ahora permite únicamente imágenes del propio sitio (`'self'`). Una alternativa más estricta sería generar hashes SHA-256 de los scripts inline de cada HTML durante el build y mantenerlos sincronizados con la CSP; eso evita `unsafe-inline`, pero requiere automatización en el pipeline para actualizarlos en cada build.
 
 ## 5) Para cada header de B2, ¿qué ataque mitiga?
 
@@ -32,15 +32,41 @@ Los assets con hash de contenido son inmutables: si cambian, se genera otro nomb
 
 Con SSR o Server Actions ya no sería posible servir solo archivos estáticos desde Firebase Hosting Spark. Habría que usar App Hosting o un backend gestionado, con más complejidad operativa y costo. En la CSP habría que abrir más orígenes y probablemente permitir más conectividad y, en algunos casos, más políticas de scripts o de conexión. Eso aumenta la superficie de ataque y exige auditoría adicional sobre dependencias y runtime.
 
-## Salida de validación local
+## Evidencia de validación de headers
 
-Se validó la configuración con `npm run build` y el emulador de Firebase Hosting (`npm run serve`), usando `node scripts/check-headers.mjs http://localhost:5000`.
+### Antes de configurar los headers (B1)
 
-Resultado esperado de la validación en local:
+Comando: `node scripts/check-headers.mjs https://practica-firebase-a8e3e.web.app`
 
-- HTML con los headers de seguridad requeridos.
-- `Cache-Control: no-cache, no-store, must-revalidate` en la home.
-- `Cache-Control: public, max-age=31536000, immutable` en `/_next/static/**`.
-- La app en `/cursos` funcionando correctamente con la CSP aplicada.
+Resultado observado antes del primer deploy a producción:
 
-En producción, la misma verificación debería terminar con `✅ Todos los controles pasaron.`
+```text
+HTML: status 404
+Faltaban: Content-Security-Policy, X-Content-Type-Options, X-Frame-Options,
+Referrer-Policy y Permissions-Policy.
+No se encontró un asset /_next/static/*.js en el HTML.
+Resultado: 5 controles pendientes.
+```
+
+La respuesta 404 indica que en ese momento todavía no estaba disponible el sitio en producción. Por eso esta medición inicial no representa un sitio accesible sin headers, sino el estado previo al deploy.
+
+### Después de configurar los headers (B5)
+
+Comando: `node scripts/check-headers.mjs https://practica-firebase-a8e3e.web.app`
+
+Resultado observado después del deploy manual a producción:
+
+```text
+HTML: status 200
+Content-Security-Policy: presente (incluye script-src 'self' 'unsafe-inline')
+Strict-Transport-Security: presente
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Cache-Control HTML: no-cache, no-store, must-revalidate
+Cache-Control asset: public, max-age=31536000, immutable
+Resultado: Todos los controles pasaron.
+```
+
+También se comprobó en `/cursos` que la búsqueda de “React” muestra `1 de 6 cursos` y el filtro “Inicial” muestra `2 de 6 cursos`.
