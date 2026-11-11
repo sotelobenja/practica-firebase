@@ -32,6 +32,32 @@ Los assets con hash de contenido son inmutables: si cambian, se genera otro nomb
 
 Con SSR o Server Actions ya no sería posible servir solo archivos estáticos desde Firebase Hosting Spark. Habría que usar App Hosting o un backend gestionado, con más complejidad operativa y costo. En la CSP habría que abrir más orígenes y probablemente permitir más conectividad y, en algunos casos, más políticas de scripts o de conexión. Eso aumenta la superficie de ataque y exige auditoría adicional sobre dependencias y runtime.
 
+## Reflexión de SQL Connect
+
+### 1) ¿Por qué ninguna operación recibe el id del alumno como variable? ¿Qué es IDOR y cómo lo evita `auth.uid`?
+
+El cliente no debe elegir la identidad sobre la que opera. Si enviara un `alumnoId`, un atacante podría sustituirlo por el de otra persona y acceder a sus datos: eso es IDOR. `auth.uid` obtiene del token verificado el UID del usuario autenticado, por lo que la operación usa la identidad del llamante, no un valor manipulable del cliente.
+
+### 2) `ListCursos` es `PUBLIC` y `ListAlumnos` es `NO_ACCESS`. ¿Qué criterio se usa? ¿Cómo listaría alumnos un panel de administración?
+
+El catálogo es público; los nombres y emails son datos personales, así que `ListAlumnos` se rechaza para clientes. Un panel administrativo debe consultar esos datos desde un backend confiable, con identidad y permisos administrativos explícitos, no desde una operación abierta al navegador.
+
+### 3) ¿Qué ventaja tiene la clave primaria compuesta de `Matricula` frente a validar duplicados en el cliente?
+
+La clave `(alumno, curso)` hace que la base de datos garantice que no haya matrículas duplicadas, incluso ante requests repetidos o concurrentes. Una validación en la interfaz solo mejora la experiencia y se puede omitir o manipular.
+
+### 4) La configuración Firebase es pública. ¿Por qué eso no compromete la base? ¿Qué aportaría App Check?
+
+La `apiKey` identifica el proyecto; no es una credencial que autorice acceso a los datos. La autorización depende de Firebase Auth y las reglas `@auth` de SQL Connect. App Check agrega una señal de que las solicitudes provienen de una app legítima y ayuda a reducir el abuso desde scripts, pero no reemplaza la autenticación ni las reglas de autorización.
+
+### 5) Frente a una API REST propia (Express + pg), ¿qué aporta SQL Connect y qué se pierde?
+
+SQL Connect integra las operaciones con Firebase Auth, ofrece autorización declarativa y expone operaciones tipadas sin enviar SQL desde el cliente. A cambio, ofrece menos libertad para diseñar endpoints y ejecutar lógica de negocio muy personalizada que una API propia.
+
+### 6) ¿Por qué no alcanzaba la CSP de la clase 1 y qué conviene listar en `connect-src`?
+
+La app ahora se conecta desde el navegador a Firebase Auth y SQL Connect, orígenes que no necesitaba el sitio estático anterior. `connect-src` debe permitir solo los dominios realmente usados por esos servicios y, en desarrollo, los puertos de los emuladores. Así se evitan conexiones arbitrarias y se limita la superficie permitida.
+
 ## Evidencia de validación de headers
 
 ### Antes de configurar los headers (B1)
