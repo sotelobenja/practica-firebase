@@ -14,7 +14,7 @@ La service account tiene permisos de despliegue y, si se compromete, puede publi
 
 ## 4) La CSP rompió la app: ¿por qué? ¿Qué opciones evaluaste y qué costo de seguridad tiene cada una?
 
-La app usa una imagen externa y, al principio, la política bloqueaba recursos ajenos al dominio propio; además, el filtro de cursos es un script cliente que debe cargarse desde el bundle estático. La solución mínima fue permitir solo el origen exacto requerido por la imagen (`https://picsum.photos`) y mantener el resto restringido. Otras opciones incluyen `img-src *`, `unsafe-inline` o `unsafe-eval`, pero cada una incrementa el ataque surface y debilita la defensa contra XSS y carga de contenido no confiable.
+La CSP inicial bloqueaba los scripts inline de hidratación que Next.js genera dentro del HTML estático; por eso la página se veía, pero el filtro no respondía. Se permite `script-src 'self' 'unsafe-inline'` para que Next.js hidrate la app. Esto tiene un costo: si un XSS logra inyectar un script inline, la CSP ya no lo bloquea. No se habilita `unsafe-eval` ni se permite JavaScript desde orígenes externos. La imagen de portada solo necesita el origen concreto `https://picsum.photos`. Una alternativa más estricta sería generar hashes SHA-256 de los scripts inline de cada HTML durante el build y mantenerlos sincronizados con la CSP; eso evita `unsafe-inline`, pero requiere automatización en el pipeline para actualizarlos en cada build.
 
 ## 5) Para cada header de B2, ¿qué ataque mitiga?
 
