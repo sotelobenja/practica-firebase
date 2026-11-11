@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "typecheck": "tsc --noEmit",
-    "serve": "firebase emulators:start --only hosting",
+    "serve": "node scripts/serve-static.mjs",
     "deploy:preview": "firebase hosting:channel:deploy local-test --expires 1d"
   },
   "dependencies": {
